@@ -38,7 +38,8 @@ export const translations = {
       statusCompletedFirst: 'Status (Completed First)',
       statusIncompleteFirst: 'Status (Incomplete First)',
       overdue: 'Overdue',
-      dueSoon: 'Due Soon'
+      dueSoon: 'Due Soon',
+      markdownSupported: 'Supports markdown formatting'
     },
     vi: {
       appTitle: 'Ứng dụng Todo',
@@ -79,6 +80,7 @@ export const translations = {
       statusCompletedFirst: 'Trạng thái (Hoàn thành trước)',
       statusIncompleteFirst: 'Trạng thái (Chưa hoàn thành trước)',
       overdue: 'Quá hạn',
-      dueSoon: 'Sắp đến hạn'
+      dueSoon: 'Sắp đến hạn',
+      markdownSupported: 'Hỗ trợ định dạng markdown'
     }
   };
