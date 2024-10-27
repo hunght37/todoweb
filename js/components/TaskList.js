@@ -11,20 +11,34 @@ export class TaskList {
       this.currentPage = 1;
   }
 
-  render(tasks, filters = {}) {
-      const startIndex = (this.currentPage - 1) * this.options.itemsPerPage;
-      const endIndex = startIndex + this.options.itemsPerPage;
-      const filteredTasks = this.filterTasks(tasks, filters);
-      const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+  sortTasks(tasks, sortBy) {
+      const [criteria, direction] = sortBy.split('-');
+      const priorityValues = { 'Cao': 3, 'Trung bình': 2, 'Thấp': 1 };
 
-      this.container.innerHTML = `
-      <ul class="space-y-4" role="list" aria-label="Todo list">
-        ${paginatedTasks.map((task, index) => this.renderTask(task, startIndex + index)).join('')}
-      </ul>
-      ${this.renderPagination(filteredTasks.length)}
-    `;
+      const sortedTasks = [...tasks].sort((a, b) => {
+          let comparison = 0;
 
-      this.attachEventListeners(paginatedTasks);
+          switch (criteria) {
+              case 'dateCreated':
+                  comparison = new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+                  break;
+              case 'dueDate':
+                  comparison = new Date(a.endDate || '9999-12-31') - new Date(b.endDate || '9999-12-31');
+                  break;
+              case 'priority':
+                  comparison = (priorityValues[b.priority] || 0) - (priorityValues[a.priority] || 0);
+                  break;
+              case 'status':
+                  comparison = (a.completed ? 1 : 0) - (b.completed ? 1 : 0);
+                  break;
+              default:
+                  return 0;
+          }
+
+          return direction === 'asc' ? comparison : -comparison;
+      });
+
+      return sortedTasks;
   }
 
   filterTasks(tasks, filters) {
@@ -46,11 +60,74 @@ export class TaskList {
       });
   }
 
+  render(tasks, filters = {}) {
+      const startIndex = (this.currentPage - 1) * this.options.itemsPerPage;
+      const endIndex = startIndex + this.options.itemsPerPage;
+      
+      let processedTasks = this.filterTasks(tasks, filters);
+      if (filters.sortBy) {
+          processedTasks = this.sortTasks(processedTasks, filters.sortBy);
+      }
+      
+      const paginatedTasks = processedTasks.slice(startIndex, endIndex);
+
+      this.container.innerHTML = `
+      <ul class="space-y-4" role="list" aria-label="Todo list">
+        ${paginatedTasks.map((task, index) => this.renderTask(task, startIndex + index)).join('')}
+      </ul>
+      ${this.renderPagination(processedTasks.length)}
+    `;
+
+      this.attachEventListeners(paginatedTasks);
+  }
+
+  getDueDateStatus(endDate) {
+      if (!endDate) return null;
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const dueDate = new Date(endDate);
+      const timeDiff = dueDate.getTime() - today.getTime();
+      const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+      if (daysDiff < 0) return 'overdue';
+      if (daysDiff <= 2) return 'due-soon';
+      return 'normal';
+  }
+
+  getDueDateIndicator(endDate) {
+      const status = this.getDueDateStatus(endDate);
+      if (!status) return '';
+
+      const indicators = {
+          'overdue': '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Overdue</span>',
+          'due-soon': '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Due Soon</span>',
+          'normal': ''
+      };
+
+      return indicators[status];
+  }
+
+  getTaskRowClass(task) {
+      const status = this.getDueDateStatus(task.endDate);
+      const baseClasses = 'bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0';
+      
+      if (task.completed) return `${baseClasses} opacity-50`;
+      
+      const statusClasses = {
+          'overdue': 'border-l-4 border-red-500',
+          'due-soon': 'border-l-4 border-yellow-500',
+          'normal': ''
+      };
+
+      return `${baseClasses} ${statusClasses[status] || ''}`;
+  }
+
   renderTask(task, index) {
+      const dueDateIndicator = this.getDueDateIndicator(task.endDate);
+      
       return `
-      <li class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0 ${
-          task.completed ? 'opacity-50' : ''
-      }" data-task-index="${index}">
+      <li class="${this.getTaskRowClass(task)}" data-task-index="${index}">
         <div class="flex items-center space-x-2">
           <input 
             type="checkbox" 
@@ -64,9 +141,12 @@ export class TaskList {
         </div>
         <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
           <span class="text-sm ${this.getPriorityColor(task.priority)}">${task.priority}</span>
-          <span class="text-sm text-gray-600 dark:text-gray-400">
-            ${task.startDate} - ${task.endDate}
-          </span>
+          <div class="flex items-center space-x-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400">
+              ${task.startDate} - ${task.endDate}
+            </span>
+            ${dueDateIndicator}
+          </div>
           <div class="flex items-center space-x-2">
             <span class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer hover:text-blue-500 category-text" title="Click to edit category">
               ${task.category || 'No category'}
@@ -138,7 +218,6 @@ export class TaskList {
           });
       });
 
-      // Add category editing functionality
       const categoryElements = this.container.querySelectorAll('.category-text, .edit-category-btn');
       categoryElements.forEach((element, index) => {
           element.addEventListener('click', () => {

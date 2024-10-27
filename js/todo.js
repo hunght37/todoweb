@@ -4,7 +4,10 @@ import { TaskList } from './components/TaskList.js';
 
 class TodoApp {
     constructor() {
-        this.tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        this.tasks = JSON.parse(localStorage.getItem('tasks') || '[]').map(task => ({
+            ...task,
+            createdAt: task.createdAt || new Date().toISOString()
+        }));
         this.categories = this.extractCategories();
         this.editingTaskIndex = null;
         
@@ -75,7 +78,10 @@ class TodoApp {
     }
 
     addTask(task) {
-        this.tasks.push(task);
+        this.tasks.push({
+            ...task,
+            createdAt: new Date().toISOString()
+        });
         this.updateLocalStorage();
         this.updateCategories();
         this.renderTasks();
@@ -91,7 +97,6 @@ class TodoApp {
         const dialog = document.getElementById('editTaskDialog');
         const form = document.getElementById('editTaskForm');
         
-        // Populate form fields with current task data
         document.getElementById('editTaskInput').value = task.text;
         document.getElementById('editTaskPriority').value = task.priority;
         document.getElementById('editTaskCategory').value = task.category || '';
@@ -146,7 +151,6 @@ class TodoApp {
     }
 }
 
-// Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
     new TodoApp();
 });

@@ -10,7 +10,7 @@ export class TaskFilters {
   
     render() {
         this.container.innerHTML = `
-        <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4" role="search">
+        <div class="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4" role="search">
           <div class="form-group">
             <label for="searchInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Search Tasks
@@ -66,6 +66,25 @@ export class TaskFilters {
               `).join('')}
             </select>
           </div>
+  
+          <div class="form-group">
+            <label for="sortBy" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Sort By
+            </label>
+            <select 
+              id="sortBy" 
+              class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
+            >
+              <option value="dateCreated-desc">Date Created (Newest)</option>
+              <option value="dateCreated-asc">Date Created (Oldest)</option>
+              <option value="dueDate-asc">Due Date (Earliest)</option>
+              <option value="dueDate-desc">Due Date (Latest)</option>
+              <option value="priority-desc">Priority (High to Low)</option>
+              <option value="priority-asc">Priority (Low to High)</option>
+              <option value="status-desc">Status (Completed First)</option>
+              <option value="status-asc">Status (Incomplete First)</option>
+            </select>
+          </div>
         </div>
       `;
   
@@ -77,7 +96,8 @@ export class TaskFilters {
             'searchInput',
             'filterPriority',
             'filterStatus',
-            'filterCategory'
+            'filterCategory',
+            'sortBy'
         ];
   
         inputs.forEach(id => {
@@ -92,7 +112,8 @@ export class TaskFilters {
             search: this.container.querySelector('#searchInput').value,
             priority: this.container.querySelector('#filterPriority').value,
             status: this.container.querySelector('#filterStatus').value,
-            category: this.container.querySelector('#filterCategory').value
+            category: this.container.querySelector('#filterCategory').value,
+            sortBy: this.container.querySelector('#sortBy').value
         };
   
         this.options.onFilter(filters);
