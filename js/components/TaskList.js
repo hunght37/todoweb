@@ -6,9 +6,14 @@ export class TaskList {
           onStatusChange: options.onStatusChange || (() => {}),
           onEdit: options.onEdit || (() => {}),
           onDelete: options.onDelete || (() => {}),
-          onCategoryEdit: options.onCategoryEdit || (() => {})
+          onCategoryEdit: options.onCategoryEdit || (() => {}),
+          translations: options.translations || {}
       };
       this.currentPage = 1;
+  }
+
+  updateTranslations(translations) {
+      this.options.translations = translations;
   }
 
   sortTasks(tasks, sortBy) {
@@ -61,6 +66,7 @@ export class TaskList {
   }
 
   render(tasks, filters = {}) {
+      const t = this.options.translations;
       const startIndex = (this.currentPage - 1) * this.options.itemsPerPage;
       const endIndex = startIndex + this.options.itemsPerPage;
       
@@ -96,12 +102,13 @@ export class TaskList {
   }
 
   getDueDateIndicator(endDate) {
+      const t = this.options.translations;
       const status = this.getDueDateStatus(endDate);
       if (!status) return '';
 
       const indicators = {
-          'overdue': '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Overdue</span>',
-          'due-soon': '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Due Soon</span>',
+          'overdue': `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">${t.overdue || 'Overdue'}</span>`,
+          'due-soon': `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">${t.dueSoon || 'Due Soon'}</span>`,
           'normal': ''
       };
 
@@ -124,6 +131,7 @@ export class TaskList {
   }
 
   renderTask(task, index) {
+      const t = this.options.translations;
       const dueDateIndicator = this.getDueDateIndicator(task.endDate);
       
       return `
@@ -133,7 +141,7 @@ export class TaskList {
             type="checkbox" 
             ${task.completed ? 'checked' : ''} 
             class="form-checkbox h-5 w-5 text-blue-600 dark:text-blue-400"
-            aria-label="Mark task as ${task.completed ? 'incomplete' : 'complete'}"
+            aria-label="${t.markAs || 'Mark as'} ${task.completed ? t.incomplete : t.completed}"
           >
           <span class="text-lg font-semibold ${task.completed ? 'line-through' : ''}">${
           DOMPurify.sanitize(task.text)
@@ -148,18 +156,18 @@ export class TaskList {
             ${dueDateIndicator}
           </div>
           <div class="flex items-center space-x-2">
-            <span class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer hover:text-blue-500 category-text" title="Click to edit category">
-              ${task.category || 'No category'}
+            <span class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer hover:text-blue-500 category-text" title="${t.editCategory || 'Click to edit category'}">
+              ${task.category || t.noCategory || 'No category'}
             </span>
-            <button class="edit-category-btn text-blue-500 hover:text-blue-700 text-sm" aria-label="Edit category">
+            <button class="edit-category-btn text-blue-500 hover:text-blue-700 text-sm" aria-label="${t.editCategory || 'Edit category'}">
               ✎
             </button>
           </div>
-          <button class="edit-btn text-blue-500 hover:text-blue-700" aria-label="Edit task">
-            Edit
+          <button class="edit-btn text-blue-500 hover:text-blue-700" aria-label="${t.edit || 'Edit task'}">
+            ${t.edit || 'Edit'}
           </button>
-          <button class="delete-btn text-red-500 hover:text-red-700" aria-label="Delete task">
-            Delete
+          <button class="delete-btn text-red-500 hover:text-red-700" aria-label="${t.delete || 'Delete task'}">
+            ${t.delete || 'Delete'}
           </button>
         </div>
       </li>

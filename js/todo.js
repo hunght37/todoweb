@@ -1,6 +1,7 @@
 import { TaskForm } from './components/TaskForm.js';
 import { TaskFilters } from './components/TaskFilters.js';
 import { TaskList } from './components/TaskList.js';
+import { translations } from './translations.js';
 
 class TodoApp {
     constructor() {
@@ -10,26 +11,66 @@ class TodoApp {
         }));
         this.categories = this.extractCategories();
         this.editingTaskIndex = null;
+        this.currentLanguage = localStorage.getItem('language') || 'en';
+        
+        this.initializeLanguage();
+        this.setupLanguageToggle();
         
         this.taskForm = new TaskForm(document.getElementById('taskFormContainer'), {
             onSubmit: this.addTask.bind(this),
-            categories: this.categories
+            categories: this.categories,
+            translations: translations[this.currentLanguage]
         });
 
         this.taskFilters = new TaskFilters(document.getElementById('taskFiltersContainer'), {
             onFilter: this.filterTasks.bind(this),
-            categories: this.categories
+            categories: this.categories,
+            translations: translations[this.currentLanguage]
         });
 
         this.taskList = new TaskList(document.getElementById('taskList'), {
             onStatusChange: this.toggleTaskStatus.bind(this),
             onEdit: this.editTask.bind(this),
             onDelete: this.deleteTask.bind(this),
-            onCategoryEdit: this.editCategory.bind(this)
+            onCategoryEdit: this.editCategory.bind(this),
+            translations: translations[this.currentLanguage]
         });
 
         this.setupEditDialog();
         this.setupDarkMode();
+        this.renderTasks();
+    }
+
+    initializeLanguage() {
+        document.documentElement.lang = this.currentLanguage;
+        this.updateTranslations();
+    }
+
+    setupLanguageToggle() {
+        const languageToggle = document.getElementById('languageToggle');
+        languageToggle.addEventListener('click', () => {
+            this.currentLanguage = this.currentLanguage === 'en' ? 'vi' : 'en';
+            localStorage.setItem('language', this.currentLanguage);
+            document.documentElement.lang = this.currentLanguage;
+            this.updateTranslations();
+            this.updateComponents();
+        });
+    }
+
+    updateTranslations() {
+        const elements = document.querySelectorAll('[data-i18n]');
+        elements.forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            if (translations[this.currentLanguage][key]) {
+                element.textContent = translations[this.currentLanguage][key];
+            }
+        });
+    }
+
+    updateComponents() {
+        this.taskForm.updateTranslations(translations[this.currentLanguage]);
+        this.taskFilters.updateTranslations(translations[this.currentLanguage]);
+        this.taskList.updateTranslations(translations[this.currentLanguage]);
         this.renderTasks();
     }
 
@@ -109,7 +150,7 @@ class TodoApp {
 
     editCategory(task, index) {
         const currentCategory = task.category || '';
-        const newCategory = prompt('Edit category:', currentCategory);
+        const newCategory = prompt(translations[this.currentLanguage].enterCategory, currentCategory);
         
         if (newCategory !== null) {
             this.tasks[index].category = DOMPurify.sanitize(newCategory.trim());
@@ -120,7 +161,7 @@ class TodoApp {
     }
 
     deleteTask(task, index) {
-        if (confirm('Are you sure you want to delete this task?')) {
+        if (confirm(translations[this.currentLanguage].deleteConfirmation)) {
             this.tasks.splice(index, 1);
             this.updateLocalStorage();
             this.updateCategories();
