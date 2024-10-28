@@ -105,6 +105,29 @@
           Todo App
         </h1>
         <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2">
+            <button
+              id="exportTasks"
+              class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+              aria-label="Export tasks"
+              title="Export tasks"
+            >
+              📤
+            </button>
+            <label
+              class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer"
+              aria-label="Import tasks"
+              title="Import tasks"
+            >
+              📥
+              <input
+                type="file"
+                id="importTasks"
+                accept=".json"
+                class="hidden"
+              />
+            </label>
+          </div>
           <button
             id="languageToggle"
             class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700"

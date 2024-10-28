@@ -38,7 +38,55 @@ class TodoApp {
 
         this.setupEditDialog();
         this.setupDarkMode();
+        this.setupExportImport();
         this.renderTasks();
+    }
+
+    setupExportImport() {
+        const exportBtn = document.getElementById('exportTasks');
+        const importInput = document.getElementById('importTasks');
+        const t = translations[this.currentLanguage];
+
+        exportBtn.addEventListener('click', () => {
+            const dataStr = JSON.stringify(this.tasks, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'todo-tasks.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        importInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedTasks = JSON.parse(event.target.result);
+                    if (Array.isArray(importedTasks)) {
+                        this.tasks = importedTasks.map(task => ({
+                            ...task,
+                            createdAt: task.createdAt || new Date().toISOString()
+                        }));
+                        this.updateLocalStorage();
+                        this.updateCategories();
+                        this.renderTasks();
+                        alert(t.importSuccess || 'Tasks imported successfully!');
+                    } else {
+                        throw new Error('Invalid format');
+                    }
+                } catch (error) {
+                    alert(t.importError || 'Error importing tasks. Please check the file format.');
+                }
+                importInput.value = '';
+            };
+            reader.readAsText(file);
+        });
     }
 
     initializeLanguage() {
@@ -77,6 +125,12 @@ class TodoApp {
     setupEditDialog() {
         const dialog = document.getElementById('editTaskDialog');
         const form = document.getElementById('editTaskForm');
+        const taskInput = document.getElementById('editTaskInput');
+        const preview = document.getElementById('editMarkdownPreview');
+        
+        taskInput.addEventListener('input', () => {
+            preview.innerHTML = DOMPurify.sanitize(marked.parse(taskInput.value));
+        });
         
         form.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -84,6 +138,7 @@ class TodoApp {
                 const updatedTask = {
                     ...this.tasks[this.editingTaskIndex],
                     text: DOMPurify.sanitize(document.getElementById('editTaskInput').value),
+                    markdown: document.getElementById('editTaskInput').value,
                     priority: document.getElementById('editTaskPriority').value,
                     category: DOMPurify.sanitize(document.getElementById('editTaskCategory').value),
                     startDate: document.getElementById('editTaskStartDate').value,
@@ -101,6 +156,7 @@ class TodoApp {
         dialog.addEventListener('close', () => {
             this.editingTaskIndex = null;
             form.reset();
+            preview.innerHTML = '';
         });
     }
 
@@ -137,12 +193,15 @@ class TodoApp {
     editTask(task, index) {
         const dialog = document.getElementById('editTaskDialog');
         const form = document.getElementById('editTaskForm');
+        const preview = document.getElementById('editMarkdownPreview');
         
-        document.getElementById('editTaskInput').value = task.text;
+        document.getElementById('editTaskInput').value = task.markdown || task.text;
         document.getElementById('editTaskPriority').value = task.priority;
         document.getElementById('editTaskCategory').value = task.category || '';
         document.getElementById('editTaskStartDate').value = task.startDate || '';
         document.getElementById('editTaskEndDate').value = task.endDate || '';
+        
+        preview.innerHTML = DOMPurify.sanitize(marked.parse(task.markdown || task.text));
         
         this.editingTaskIndex = index;
         dialog.showModal();
