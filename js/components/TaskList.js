@@ -49,7 +49,8 @@ export class TaskList {
   filterTasks(tasks, filters) {
       return tasks.filter(task => {
           const matchesSearch = !filters.search ||
-              task.text.toLowerCase().includes(filters.search.toLowerCase());
+              task.text.toLowerCase().includes(filters.search.toLowerCase()) ||
+              (task.markdown && task.markdown.toLowerCase().includes(filters.search.toLowerCase()));
           const matchesPriority = !filters.priority ||
               filters.priority === 'all' ||
               task.priority === filters.priority;
@@ -133,21 +134,26 @@ export class TaskList {
   renderTask(task, index) {
       const t = this.options.translations;
       const dueDateIndicator = this.getDueDateIndicator(task.endDate);
+      const taskContent = task.markdown ? 
+          DOMPurify.sanitize(marked.parse(task.markdown)) : 
+          DOMPurify.sanitize(task.text);
       
       return `
       <li class="${this.getTaskRowClass(task)}" data-task-index="${index}">
-        <div class="flex items-center space-x-2">
+        <div class="flex items-start space-x-2 flex-1">
           <input 
             type="checkbox" 
             ${task.completed ? 'checked' : ''} 
-            class="form-checkbox h-5 w-5 text-blue-600 dark:text-blue-400"
+            class="form-checkbox h-5 w-5 mt-1 text-blue-600 dark:text-blue-400"
             aria-label="${t.markAs || 'Mark as'} ${task.completed ? t.incomplete : t.completed}"
           >
-          <span class="text-lg font-semibold ${task.completed ? 'line-through' : ''}">${
-          DOMPurify.sanitize(task.text)
-      }</span>
+          <div class="flex-1">
+            <div class="${task.completed ? 'line-through' : ''} prose dark:prose-invert max-w-none">
+              ${taskContent}
+            </div>
+          </div>
         </div>
-        <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+        <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 items-end md:items-center">
           <span class="text-sm ${this.getPriorityColor(task.priority)}">${task.priority}</span>
           <div class="flex items-center space-x-2">
             <span class="text-sm text-gray-600 dark:text-gray-400">

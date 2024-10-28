@@ -8,9 +8,13 @@
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
       rel="stylesheet"
     />
+    <link 
+      href="https://cdn.jsdelivr.net/npm/@tailwindcss/typography@0.5.10/dist/typography.min.css" 
+      rel="stylesheet"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-      /* Previous styles remain the same */
       .dark {
         color-scheme: dark;
       }
@@ -70,12 +74,23 @@
         max-width: 32rem;
         width: 90%;
       }
+
+      .prose {
+        max-width: none;
+      }
+
+      .prose img {
+        max-width: 100%;
+        height: auto;
+      }
     </style>
   </head>
   <body
     class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-200"
   >
-    <a href="#main" class="skip-link" data-i18n="skipToMain">Skip to main content</a>
+    <a href="#main" class="skip-link" data-i18n="skipToMain"
+      >Skip to main content</a
+    >
 
     <nav
       class="bg-white dark:bg-gray-800 shadow-lg p-4"
@@ -83,7 +98,10 @@
       aria-label="Main navigation"
     >
       <div class="container mx-auto flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-800 dark:text-white" data-i18n="appTitle">
+        <h1
+          class="text-2xl font-bold text-gray-800 dark:text-white"
+          data-i18n="appTitle"
+        >
           Todo App
         </h1>
         <div class="flex items-center space-x-4">
@@ -113,7 +131,10 @@
 
     <dialog id="editTaskDialog" class="bg-white dark:bg-gray-800">
       <div class="p-6">
-        <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white" data-i18n="editTask">
+        <h2
+          class="text-xl font-bold mb-4 text-gray-800 dark:text-white"
+          data-i18n="editTask"
+        >
           Edit Task
         </h2>
         <form method="dialog" id="editTaskForm" class="space-y-4">
@@ -123,14 +144,14 @@
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               data-i18n="taskDescription"
             >
-              Task Description
+              Task Description <span class="text-xs text-gray-500">(Markdown supported)</span>
             </label>
-            <input
-              type="text"
+            <textarea
               id="editTaskInput"
-              class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
+              class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white min-h-[100px]"
               required
-            />
+            ></textarea>
+            <div id="editMarkdownPreview" class="mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded border dark:border-gray-700 prose dark:prose-invert"></div>
           </div>
           <div>
             <label
