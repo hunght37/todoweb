@@ -15,6 +15,7 @@ class TodoApp {
         
         this.initializeLanguage();
         this.setupLanguageToggle();
+        this.setupKeyboardShortcuts();
         
         this.taskForm = new TaskForm(document.getElementById('taskFormContainer'), {
             onSubmit: this.addTask.bind(this),
@@ -40,6 +41,103 @@ class TodoApp {
         this.setupDarkMode();
         this.setupExportImport();
         this.renderTasks();
+    }
+
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Only handle shortcuts if not in an input field
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            // Ctrl/Cmd + / - Show keyboard shortcuts
+            if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+                e.preventDefault();
+                this.showShortcutsDialog();
+                return;
+            }
+
+            // n - Focus new task input
+            if (e.key === 'n') {
+                e.preventDefault();
+                document.getElementById('taskInput')?.focus();
+                return;
+            }
+
+            // / - Focus search input
+            if (e.key === '/') {
+                e.preventDefault();
+                document.getElementById('searchInput')?.focus();
+                return;
+            }
+
+            // d - Toggle dark mode
+            if (e.key === 'd') {
+                e.preventDefault();
+                document.getElementById('darkModeToggle')?.click();
+                return;
+            }
+
+            // l - Toggle language
+            if (e.key === 'l') {
+                e.preventDefault();
+                document.getElementById('languageToggle')?.click();
+                return;
+            }
+
+            // e - Export tasks
+            if (e.key === 'e') {
+                e.preventDefault();
+                document.getElementById('exportTasks')?.click();
+                return;
+            }
+        });
+    }
+
+    showShortcutsDialog() {
+        const t = this.options?.translations || translations[this.currentLanguage];
+        const shortcuts = [
+            ['Ctrl/Cmd + /', 'Show keyboard shortcuts'],
+            ['n', 'New task'],
+            ['/', 'Search tasks'],
+            ['d', 'Toggle dark mode'],
+            ['l', 'Toggle language'],
+            ['e', 'Export tasks']
+        ];
+
+        const dialog = document.createElement('dialog');
+        dialog.className = 'bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md';
+        
+        dialog.innerHTML = `
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white">Keyboard Shortcuts</h2>
+                    <button class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" onclick="this.closest('dialog').close()">✕</button>
+                </div>
+                <div class="space-y-2">
+                    ${shortcuts.map(([key, description]) => `
+                        <div class="flex justify-between items-center">
+                            <kbd class="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm">${key}</kbd>
+                            <span class="text-gray-700 dark:text-gray-300">${description}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(dialog);
+        dialog.showModal();
+
+        dialog.addEventListener('close', () => {
+            dialog.remove();
+        });
+
+        // Close on click outside
+        dialog.addEventListener('click', (e) => {
+            if (e.target === dialog) {
+                dialog.close();
+            }
+        });
     }
 
     setupExportImport() {
